@@ -226,7 +226,7 @@ if __name__=='__main__':
     )
     policy = PolicyWrapper(policy_fn, metadata=dataset_statistics)
 
-    env = RobotEnv(action_space='cartesian_position', camera_kwargs=dict(
+    env = RobotEnv(action_space='cartesian_velocity', camera_kwargs=dict(
         hand_camera=dict(image=True, concatenate_images=False, resolution=(128, 128), resize_func="cv2"),
         varied_camera=dict(image=True, concatenate_images=False, resolution=(256, 256), resize_func="cv2"),
     ))
@@ -235,7 +235,7 @@ if __name__=='__main__':
     collect_trajectory(
         env,
         controller=controller,
-        policy=policy,
+        policy=None, #policy,
         wait_for_controller=True,
         randomize_reset=False,
         reset_robot=True,
