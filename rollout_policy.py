@@ -38,7 +38,6 @@ class PolicyWrapper:
 
     def forward(self, obs):
         if len(self.action_buffer) == 0:
-            print_nested_keys(obs)
             self.processed_obs = self.process_obs(obs)
             for k in self.processed_obs.keys():
                 print(k, self.processed_obs[k].shape, type(self.processed_obs[k]))
@@ -141,6 +140,7 @@ def collect_trajectory(
 
         if policy is None:
             action, controller_action_info = controller.forward(obs, include_info=True)
+            print('teleop info', action, controller_action_info)
         else:
             action = policy.forward(obs)
             controller_action_info = {}
