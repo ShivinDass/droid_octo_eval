@@ -205,9 +205,23 @@ if __name__=='__main__':
     parser.add_argument("--ckpt", default=None, type=str, help="path to model checkpoint")
     parser.add_argument("--save_vid", action="store_true", help="create a video of rollout")
     parser.add_argument("--n_rollouts", default=10, type=int, help="number of rollouts to perform")
+    parser.add_argument("--task_id", default=None, type=str, help="task id to use")
     args = parser.parse_args()
 
-    text = "open the drawer"
+    if 'bread' == args.task_id:
+        text = 'place the bread in the black bowl'
+    elif 'drawer' == args.task_id:
+        text = 'close the drawer'
+    elif 'napkin' == args.task_id:
+        text = 'place the napkin in the drawer'
+    else:
+        raise ValueError(f"Unknown task id {args.task_id}")
+
+    env = RobotEnv(action_space='cartesian_velocity', camera_kwargs=dict(
+        hand_camera=dict(image=True, concatenate_images=False, resolution=(128, 128), resize_func="cv2"),
+        varied_camera=dict(image=True, concatenate_images=False, resolution=(256, 256), resize_func="cv2"),
+    ))
+    controller = VRPolicy(right_controller=True)
 
     if args.ckpt is not None:
         model = OctoModel.load_pretrained(args.ckpt)
@@ -224,12 +238,6 @@ if __name__=='__main__':
         policy = PolicyWrapper(policy_fn, metadata=dataset_statistics)
     else:
         policy = None
-
-    env = RobotEnv(action_space='cartesian_velocity', camera_kwargs=dict(
-        hand_camera=dict(image=True, concatenate_images=False, resolution=(128, 128), resize_func="cv2"),
-        varied_camera=dict(image=True, concatenate_images=False, resolution=(256, 256), resize_func="cv2"),
-    ))
-    controller = VRPolicy(right_controller=True)
 
     collect_trajectory(
         env,
