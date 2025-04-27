@@ -185,7 +185,7 @@ def sample_actions(
     rng
 ):
     # add batch and horizon dim to observations
-    observations = jax.tree_map(lambda x: x[None, None], observations)
+    observations = jax.tree_map(lambda x: x[None], observations)
     actions = pretrained_model.sample_actions(
         observations,
         tasks,
