@@ -135,14 +135,17 @@ def collect_trajectory(
             
 
         action, controller_action_info = controller.forward(obs, include_info=True)
-        print('teleop info', np.linalg.norm(action[:6]))
+        print('teleop info', controller.get_info()['movement_enabled'])
         
-        if (policy is not None) and np.linalg.norm(action[:6]) < 0.001:
-            action = policy.forward(obs)
-            print("final action", action)
-            recording1.append(policy.processed_obs["image_primary"][..., :3])
-            recording2.append(policy.processed_obs["image_wrist"][..., :3])
-            controller_action_info = {}
+        # if (policy is not None) and np.linalg.norm(action[:6]) < 0.01:
+        #     action = policy.forward(obs)
+        #     action = np.zeros_like(action)
+        #     action[0] = 0.01
+        #     print("final action", action)
+        #     recording1.append(policy.processed_obs["image_primary"][..., :3])
+        #     recording2.append(policy.processed_obs["image_wrist"][..., :3])
+        #     controller_action_info = {}
+        #     controller.reset_state()
 
         # Regularize Control Frequency #
         comp_time = time_ms() - control_timestamps["step_start"]
