@@ -7,6 +7,17 @@ from functools import partial
 
 import jax
 from octo.model.octo_model import OctoModel
+import cv2
+
+def write_video(video_frames, filename, fps=10):
+    '''
+    video_frames: list of frames (T, H, W, C)
+    '''
+
+    import imageio
+    for i in range(len(video_frames)):
+        video_frames[i] = cv2.cvtColor(video_frames[i], cv2.COLOR_RGB2BGR)
+    imageio.mimwrite(filename, video_frames, fps=fps)
 
 def print_nested_keys(obs, level=0):
     for k in obs:
@@ -31,6 +42,8 @@ class PolicyWrapper:
             processed_obs = self.process_obs(obs)
             for k in processed_obs.keys():
                 print(k, processed_obs[k].shape, type(processed_obs[k]))
+
+            return processed_obs
         #     actions = self.policy(processed_obs)
         #     self.action_buffer = actions.tolist()
 
@@ -91,6 +104,8 @@ def collect_trajectory(
         randomize_reset=False,
         reset_robot=True,
     ):
+
+    recording = []
     # Check Parameters #
     assert (controller is not None) or (policy is not None)
     assert (controller is not None) or (horizon is not None)
@@ -120,7 +135,8 @@ def collect_trajectory(
         obs["timestamp"]["skip_action"] = skip_action
 
         if policy2 is not None:
-            policy2.forward(obs)
+            n_obs = policy2.forward(obs)
+            recording.append(np.concatenate([n_obs["image_primary"], n_obs["image_wrist"]], axis=-1))[..., :3]
 
         if policy is None:
             action, controller_action_info = controller.forward(obs, include_info=True)
@@ -155,6 +171,7 @@ def collect_trajectory(
 
         # Close Files And Return #
         if end_traj:
+            write_video(recording, 'test.mp4', fps=10)
             return controller_info
 
 
