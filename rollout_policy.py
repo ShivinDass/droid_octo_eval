@@ -205,14 +205,14 @@ if __name__=='__main__':
     parser.add_argument("--ckpt", default=None, type=str, help="path to model checkpoint")
     parser.add_argument("--save_vid", action="store_true", help="create a video of rollout")
     parser.add_argument("--n_rollouts", default=10, type=int, help="number of rollouts to perform")
-    parser.add_argument("--task_id", default=None, type=str, help="task id to use")
+    parser.add_argument("--task", default=None, type=str, help="task id to use")
     args = parser.parse_args()
 
-    if 'bread' == args.task_id:
+    if 'bread' == args.task:
         text = 'place the bread in the black bowl'
-    elif 'drawer' == args.task_id:
+    elif 'drawer' == args.task:
         text = 'close the drawer'
-    elif 'napkin' == args.task_id:
+    elif 'napkin' == args.task:
         text = 'place the napkin in the drawer'
     else:
         raise ValueError(f"Unknown task id {args.task_id}")
