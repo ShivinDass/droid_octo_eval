@@ -136,7 +136,7 @@ def collect_trajectory(
 
         action, controller_action_info = controller.forward(obs, include_info=True)
         
-        if (policy is not None) and (not controller_action_info["movement_enabled"]):
+        if (policy is not None) and (not controller.get_info()["movement_enabled"]):
             # action = policy.forward(obs)
             action = np.zeros_like(action)
             action[0] = 0.01
