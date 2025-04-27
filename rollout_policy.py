@@ -105,7 +105,8 @@ def collect_trajectory(
         reset_robot=True,
     ):
 
-    recording = []
+    recording1 = []
+    recording2 = []
     # Check Parameters #
     assert (controller is not None) or (policy is not None)
     assert (controller is not None) or (horizon is not None)
@@ -136,7 +137,8 @@ def collect_trajectory(
 
         if policy2 is not None:
             n_obs = policy2.forward(obs)
-            recording.append(np.concatenate([n_obs["image_primary"], n_obs["image_wrist"]], axis=-1))[..., :3]
+            recording1.append(n_obs["image_primary"][..., :3])
+            recording2.append(n_obs["image_wrist"][..., :3])
 
         if policy is None:
             action, controller_action_info = controller.forward(obs, include_info=True)
@@ -171,7 +173,8 @@ def collect_trajectory(
 
         # Close Files And Return #
         if end_traj:
-            write_video(recording, 'test.mp4', fps=10)
+            write_video(recording1, 'test1.mp4', fps=10)
+            write_video(recording2, 'test2.mp4', fps=10)
             return controller_info
 
 
