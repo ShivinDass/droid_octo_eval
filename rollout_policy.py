@@ -3,6 +3,7 @@ from droid.robot_env import RobotEnv
 from droid.misc.time import time_ms
 import time
 import numpy as np
+from octo.model.octo_model import OctoModel
 
 def collect_trajectory(
         env,
