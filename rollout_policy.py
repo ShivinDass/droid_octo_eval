@@ -125,7 +125,6 @@ def collect_trajectory(
     while True:
         # Collect Miscellaneous Info #
         controller_info = {} if (controller is None) else controller.get_info()
-        skip_action = wait_for_controller and (not controller_info["movement_enabled"])
         control_timestamps = {"step_start": time_ms()}
 
         # Get Observation #
@@ -154,10 +153,7 @@ def collect_trajectory(
 
         # Step Environment #
         control_timestamps["control_start"] = time_ms()
-        if skip_action:
-            action_info = env.create_action_dict(np.zeros_like(action))
-        else:
-            action_info = env.step(action)
+        action_info = env.step(action)
 
         action_info.update(controller_action_info)
 
