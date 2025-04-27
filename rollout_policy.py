@@ -3,12 +3,89 @@ from droid.robot_env import RobotEnv
 from droid.misc.time import time_ms
 import time
 import numpy as np
+from functools import partial
+
+import jax
 from octo.model.octo_model import OctoModel
+
+def print_nested_keys(obs, level=0):
+    for k in obs:
+        if isinstance(obs[k], dict):
+            print("\t"*level, k)
+            print_nested_keys(obs[k], level=level+1)
+        else:
+            print("\t"*level, k, np.array(obs[k]).shape)
+
+class PolicyWrapper:
+
+    def __init__(self, policy, metadata):
+        self.normalization_type = "normal"
+        self.metadata = metadata
+
+        self.policy = policy
+        self.action_buffer = []
+
+    def forward(self, obs):
+        if len(self.action_buffer) == 0:
+            print_nested_keys(obs)
+            processed_obs = self.process_obs(obs)
+            for k in processed_obs.keys():
+                print(k, processed_obs[k].shape, type(processed_obs[k]))
+        #     actions = self.policy(processed_obs)
+        #     self.action_buffer = actions.tolist()
+
+        # action = self.action_buffer.pop(0)
+        # actions = self.process_actions(action)
+        # return action
+    
+    def process_obs(self, obs):
+        # Normalize Proprioception
+        new_obs = {}
+        # proprio = np.concatenate(obs["robot_state"]["cartesian_position"], obs["robot_state"]["gripper_"])
+        # new_obs["proprio"] = self.normalize(proprio, self.metadata["proprio"])
+
+        new_obs["image_primary"] = obs["image"]["36088355_left"].astype(np.float32)
+        new_obs["image_wrist"] = obs["image"]["18659563_left"].astype(np.float32)
+
+        return obs
+    
+    def process_actions(self, action):
+        # Normalize Action
+        action = self.unnormalize(action, self.metadata["action"])
+        action[-1] = np.clip(1-action[-1], 0, 1)
+        return action
+    
+    def unnormalize(self, data, metadata):
+        mask = metadata.get("mask", np.ones_like(metadata["mean"], dtype=bool))
+        if self.normalization_type == "normal":
+            return np.where(
+                mask,
+                (data * metadata["std"]) + metadata["mean"],
+                data,
+            )
+        else:
+            raise ValueError(
+                f"Unknown action/proprio normalization type: {self.normalization_type}"
+            )
+
+    def normalize(self, data, metadata):
+        mask = metadata.get("mask", np.ones_like(metadata["mean"], dtype=bool))
+        if self.normalization_type == "normal":
+            return np.where(
+                mask,
+                (data - metadata["mean"]) / (metadata["std"] + 1e-8),
+                data,
+            )
+        else:
+            raise ValueError(
+                f"Unknown action/proprio normalization type: {self.normalization_type}"
+            )
 
 def collect_trajectory(
         env,
         controller=None,
         policy=None,
+        policy2=None,
         horizon=None,
         wait_for_controller=False,
         randomize_reset=False,
@@ -42,7 +119,8 @@ def collect_trajectory(
         obs["controller_info"] = controller_info
         obs["timestamp"]["skip_action"] = skip_action
 
-        print(obs)
+        if policy2 is not None:
+            policy2.forward(obs)
 
         if policy is None:
             action, controller_action_info = controller.forward(obs, include_info=True)
@@ -80,6 +158,31 @@ def collect_trajectory(
             return controller_info
 
 
+@jax.jit
+def sample_actions(
+    pretrained_model: OctoModel,
+    observations,
+    tasks,
+    rng
+):
+    # add batch and horizon dim to observations
+    observations = jax.tree_map(lambda x: x[None, None], observations)
+    actions = pretrained_model.sample_actions(
+        observations,
+        tasks,
+        rng=rng,
+    )
+    # remove batch dim
+    return actions[0]
+
+def supply_rng(f, rng=jax.random.PRNGKey(0)):
+    def wrapped(*args, **kwargs):
+        nonlocal rng
+        rng, key = jax.random.split(rng)
+        return f(*args, rng=key, **kwargs)
+
+    return wrapped
+
 if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser()
@@ -94,8 +197,19 @@ if __name__=='__main__':
     dataset_statistics = model.dataset_statistics
 
     task = model.create_tasks(texts=[text])
+    policy_fn = supply_rng(
+        partial(
+            sample_actions,
+            model,
+            tasks=task,
+        )
+    )
+    policy = PolicyWrapper(policy_fn)
 
-    env = RobotEnv()
+    env = RobotEnv(camera_kwargs=dict(
+        hand_camera=dict(image=True, concatenate_images=False, resolution=(128, 128), resize_func="cv2"),
+        varied_camera=dict(image=True, concatenate_images=False, resolution=(256, 256), resize_func="cv2"),
+    ))
     controller = VRPolicy(right_controller=True)
 
     collect_trajectory(
@@ -105,4 +219,5 @@ if __name__=='__main__':
         wait_for_controller=True,
         randomize_reset=False,
         reset_robot=True,
+        policy2=policy,
     )
