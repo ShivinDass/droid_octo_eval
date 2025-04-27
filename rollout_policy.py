@@ -136,15 +136,15 @@ def collect_trajectory(
 
         action, controller_action_info = controller.forward(obs, include_info=True)
         
-        # if (policy is not None) and (not congroller_info["movement_enabled"]):
-        #     action = policy.forward(obs)
-        #     action = np.zeros_like(action)
-        #     action[0] = 0.01
-        #     print("final action", action)
-        #     recording1.append(policy.processed_obs["image_primary"][..., :3])
-        #     recording2.append(policy.processed_obs["image_wrist"][..., :3])
-        #     controller_action_info = {}
-        #     controller.reset_state()
+        if (policy is not None) and (not controller_action_info["movement_enabled"]):
+            action = policy.forward(obs)
+            action = np.zeros_like(action)
+            action[0] = 0.01
+            print("final action", action)
+            recording1.append(policy.processed_obs["image_primary"][..., :3])
+            recording2.append(policy.processed_obs["image_wrist"][..., :3])
+            controller_action_info = {}
+            controller.reset_state()
 
         # Regularize Control Frequency #
         comp_time = time_ms() - control_timestamps["step_start"]
@@ -157,7 +157,6 @@ def collect_trajectory(
         if skip_action:
             action_info = env.create_action_dict(np.zeros_like(action))
         else:
-            print("action", action)
             action_info = env.step(action)
 
         action_info.update(controller_action_info)
