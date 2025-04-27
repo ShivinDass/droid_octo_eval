@@ -62,7 +62,8 @@ class PolicyWrapper:
     def process_action(self, action):
         # Normalize Action
         action = self.unnormalize(action, self.metadata["action"])
-        action[-1] = np.clip(1-action[-1], 0, 1)
+        action[-1] = 1-action[-1]
+        action = np.clip(action, -1, 1)
         return action
     
     def unnormalize(self, data, metadata):
@@ -225,7 +226,7 @@ if __name__=='__main__':
     )
     policy = PolicyWrapper(policy_fn, metadata=dataset_statistics)
 
-    env = RobotEnv(camera_kwargs=dict(
+    env = RobotEnv(action_space='cartesian_position', camera_kwargs=dict(
         hand_camera=dict(image=True, concatenate_images=False, resolution=(128, 128), resize_func="cv2"),
         varied_camera=dict(image=True, concatenate_images=False, resolution=(256, 256), resize_func="cv2"),
     ))
