@@ -130,7 +130,6 @@ def collect_trajectory(
         # Get Observation #
         obs = env.get_observation()
         obs["controller_info"] = controller_info
-        obs["timestamp"]["skip_action"] = skip_action
             
 
         action, controller_action_info = controller.forward(obs, include_info=True)
