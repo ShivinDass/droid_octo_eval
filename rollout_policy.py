@@ -67,6 +67,7 @@ class PolicyWrapper:
         # Normalize Action
         action = self.unnormalize(action, self.metadata["action"])
         action[-1] = 1-action[-1]
+        action[-1] = 1 if action[-1] > 0 else 0
         action = np.clip(action, -1, 1)
         return action
     
@@ -140,7 +141,7 @@ def collect_trajectory(
         
         if (policy is not None) and (not controller.get_info()["movement_enabled"]):
             action = policy.forward(obs)
-            print("final action", action)
+            print("final action", action[-1])
             recording1.append(policy.processed_obs["image_primary"][..., :3])
             recording2.append(policy.processed_obs["image_wrist"][..., :3])
             controller_action_info = {}
