@@ -39,26 +39,24 @@ class PolicyWrapper:
     def forward(self, obs):
         if len(self.action_buffer) == 0:
             print_nested_keys(obs)
-            processed_obs = self.process_obs(obs)
-            for k in processed_obs.keys():
-                print(k, processed_obs[k].shape, type(processed_obs[k]))
+            self.processed_obs = self.process_obs(obs)
+            for k in self.processed_obs.keys():
+                print(k, self.processed_obs[k].shape, type(self.processed_obs[k]))
 
-            return processed_obs
-        #     actions = self.policy(processed_obs)
-        #     self.action_buffer = actions.tolist()
+            actions = np.asarray(self.policy(self.processed_obs))
+            self.action_buffer = actions.tolist()
 
-        # action = self.action_buffer.pop(0)
-        # actions = self.process_actions(action)
-        # return action
+        action = self.action_buffer.pop(0)
+        actions = self.process_actions(action)
+        return action
     
     def process_obs(self, obs):
         # Normalize Proprioception
         new_obs = {}
         # proprio = np.concatenate(obs["robot_state"]["cartesian_position"], obs["robot_state"]["gripper_"])
         # new_obs["proprio"] = self.normalize(proprio, self.metadata["proprio"])
-
-        new_obs["image_primary"] = obs["image"]["36088355_left"].astype(np.float32)
-        new_obs["image_wrist"] = obs["image"]["18659563_left"].astype(np.float32)
+        new_obs["image_primary"] = cv2.cvtColor(obs["image"]["36088355_left"][..., :3].astype(np.uint8), cv2.COLOR_RGB2BGR).astype(np.float32)
+        new_obs["image_wrist"] = cv2.cvtColor(obs["image"]["18659563_left"][..., :3].astype(np.uint8), cv2.COLOR_RGB2BGR).astype(np.float32)
 
         return new_obs
     
@@ -136,9 +134,10 @@ def collect_trajectory(
         obs["timestamp"]["skip_action"] = skip_action
 
         if policy2 is not None:
-            n_obs = policy2.forward(obs)
-            recording1.append(n_obs["image_primary"][..., :3])
-            recording2.append(n_obs["image_wrist"][..., :3])
+            action = policy2.forward(obs)
+            print("final action", action)
+            recording1.append(policy2.processed_obs["image_primary"][..., :3])
+            recording2.append(policy2.processed_obs["image_wrist"][..., :3])
 
         if policy is None:
             action, controller_action_info = controller.forward(obs, include_info=True)
