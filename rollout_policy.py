@@ -39,8 +39,8 @@ class PolicyWrapper:
     def forward(self, obs):
         if len(self.action_buffer) == 0:
             self.processed_obs = self.process_obs(obs)
-            for k in self.processed_obs.keys():
-                print(k, self.processed_obs[k].shape, type(self.processed_obs[k]))
+            # for k in self.processed_obs.keys():
+            #     print(k, self.processed_obs[k].shape, type(self.processed_obs[k]))
 
             actions = np.asarray(self.policy(self.processed_obs))
             self.action_buffer = actions.tolist()
@@ -66,8 +66,10 @@ class PolicyWrapper:
     def process_action(self, action):
         # Normalize Action
         action = self.unnormalize(action, self.metadata["action"])
-        action[-1] = 1-action[-1]
+        # action[-1] = 1-action[-1]
         action[-1] = 1 if action[-1] > 0 else 0
+
+        print('gripper', action[-1])
         action = np.clip(action, -1, 1)
         return action
     
