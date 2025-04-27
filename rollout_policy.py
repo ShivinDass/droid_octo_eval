@@ -47,7 +47,7 @@ class PolicyWrapper:
         new_obs["image_primary"] = obs["image"]["36088355_left"].astype(np.float32)
         new_obs["image_wrist"] = obs["image"]["18659563_left"].astype(np.float32)
 
-        return obs
+        return new_obs
     
     def process_actions(self, action):
         # Normalize Action
