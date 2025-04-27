@@ -57,7 +57,7 @@ class PolicyWrapper:
         # new_obs["proprio"] = self.normalize(proprio, self.metadata["proprio"])
         new_obs["image_primary"] = cv2.cvtColor(obs["image"]["36088355_left"][..., :3].astype(np.uint8), cv2.COLOR_RGB2BGR).astype(np.float32)
         new_obs["image_wrist"] = cv2.cvtColor(obs["image"]["18659563_left"][..., :3].astype(np.uint8), cv2.COLOR_RGB2BGR).astype(np.float32)
-
+        new_obs["pad_mask"] = np.ones(1)
         return new_obs
     
     def process_actions(self, action):
@@ -185,7 +185,7 @@ def sample_actions(
     rng
 ):
     # add batch and horizon dim to observations
-    observations = jax.tree_map(lambda x: x[None], observations)
+    observations = jax.tree_map(lambda x: x[None, None], observations)
     actions = pretrained_model.sample_actions(
         observations,
         tasks,
