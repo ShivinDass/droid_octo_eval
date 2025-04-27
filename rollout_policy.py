@@ -46,7 +46,7 @@ class PolicyWrapper:
             self.action_buffer = actions.tolist()
 
         action = self.action_buffer.pop(0)
-        actions = self.process_actions(action)
+        action = self.process_action(action)
         return action
     
     def process_obs(self, obs):
@@ -59,7 +59,7 @@ class PolicyWrapper:
         new_obs["pad_mask"] = np.ones(1)
         return new_obs
     
-    def process_actions(self, action):
+    def process_action(self, action):
         # Normalize Action
         action = self.unnormalize(action, self.metadata["action"])
         action[-1] = np.clip(1-action[-1], 0, 1)
@@ -95,11 +95,11 @@ def collect_trajectory(
         env,
         controller=None,
         policy=None,
-        policy2=None,
         horizon=None,
         wait_for_controller=False,
         randomize_reset=False,
         reset_robot=True,
+        record_traj=False,
     ):
 
     recording1 = []
@@ -131,18 +131,16 @@ def collect_trajectory(
         obs = env.get_observation()
         obs["controller_info"] = controller_info
         obs["timestamp"]["skip_action"] = skip_action
+            
 
-        if policy2 is not None:
-            action = policy2.forward(obs)
-            print("final action", action)
-            recording1.append(policy2.processed_obs["image_primary"][..., :3])
-            recording2.append(policy2.processed_obs["image_wrist"][..., :3])
-
-        if policy is None:
-            action, controller_action_info = controller.forward(obs, include_info=True)
-            print('teleop info', action, controller_action_info)
-        else:
+        action, controller_action_info = controller.forward(obs, include_info=True)
+        print('teleop info', np.linalg.norm(action[:6]))
+        
+        if (policy is not None) and np.linalg.norm(action[:6]) < 0.001:
             action = policy.forward(obs)
+            print("final action", action)
+            recording1.append(policy.processed_obs["image_primary"][..., :3])
+            recording2.append(policy.processed_obs["image_wrist"][..., :3])
             controller_action_info = {}
 
         # Regularize Control Frequency #
@@ -172,8 +170,9 @@ def collect_trajectory(
 
         # Close Files And Return #
         if end_traj:
-            write_video(recording1, 'test1.mp4', fps=10)
-            write_video(recording2, 'test2.mp4', fps=10)
+            if record_traj:
+                write_video(np.array(recording1).astype(np.uint8), 'test1.mp4', fps=10)
+                write_video(np.array(recording2).astype(np.uint8), 'test2.mp4', fps=10)
             return controller_info
 
 
@@ -235,9 +234,9 @@ if __name__=='__main__':
     collect_trajectory(
         env,
         controller=controller,
-        policy=None,
+        policy=policy,
         wait_for_controller=True,
         randomize_reset=False,
         reset_robot=True,
-        policy2=policy,
+        record_traj=args.save_vid,
     )
