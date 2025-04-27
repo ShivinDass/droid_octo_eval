@@ -54,8 +54,12 @@ class PolicyWrapper:
         new_obs = {}
         # proprio = np.concatenate(obs["robot_state"]["cartesian_position"], obs["robot_state"]["gripper_"])
         # new_obs["proprio"] = self.normalize(proprio, self.metadata["proprio"])
-        new_obs["image_primary"] = cv2.cvtColor(obs["image"]["36088355_left"][..., :3].astype(np.uint8), cv2.COLOR_RGB2BGR).astype(np.float32)
-        new_obs["image_wrist"] = cv2.cvtColor(obs["image"]["18659563_left"][..., :3].astype(np.uint8), cv2.COLOR_RGB2BGR).astype(np.float32)
+
+        # new_obs["image_primary"] = cv2.cvtColor(obs["image"]["36088355_left"][..., :3].astype(np.uint8), cv2.COLOR_RGB2BGR).astype(np.float32)
+        # new_obs["image_wrist"] = cv2.cvtColor(obs["image"]["18659563_left"][..., :3].astype(np.uint8), cv2.COLOR_RGB2BGR).astype(np.float32)
+        new_obs["image_primary"] = obs["image"]["36088355_left"][..., :3].astype(np.float32)
+        new_obs["image_wrist"] = obs["image"]["18659563_left"][..., :3].astype(np.float32)
+        print('max', new_obs["image_primary"].max(), new_obs["image_primary"].min())
         new_obs["pad_mask"] = np.ones(1)
         return new_obs
     
