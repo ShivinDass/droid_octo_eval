@@ -209,18 +209,21 @@ if __name__=='__main__':
 
     text = "open the drawer"
 
-    model = OctoModel.load_pretrained(args.ckpt)
-    dataset_statistics = model.dataset_statistics
+    if args.ckpt is not None:
+        model = OctoModel.load_pretrained(args.ckpt)
+        dataset_statistics = model.dataset_statistics
 
-    task = model.create_tasks(texts=[text])
-    policy_fn = supply_rng(
-        partial(
-            sample_actions,
-            model,
-            tasks=task,
+        task = model.create_tasks(texts=[text])
+        policy_fn = supply_rng(
+            partial(
+                sample_actions,
+                model,
+                tasks=task,
+            )
         )
-    )
-    policy = PolicyWrapper(policy_fn, metadata=dataset_statistics)
+        policy = PolicyWrapper(policy_fn, metadata=dataset_statistics)
+    else:
+        policy = None
 
     env = RobotEnv(action_space='cartesian_velocity', camera_kwargs=dict(
         hand_camera=dict(image=True, concatenate_images=False, resolution=(128, 128), resize_func="cv2"),
