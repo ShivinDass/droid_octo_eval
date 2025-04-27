@@ -135,9 +135,8 @@ def collect_trajectory(
             
 
         action, controller_action_info = controller.forward(obs, include_info=True)
-        print('teleop info', controller.get_info()['movement_enabled'])
         
-        # if (policy is not None) and np.linalg.norm(action[:6]) < 0.01:
+        # if (policy is not None) and (not congroller_info["movement_enabled"]):
         #     action = policy.forward(obs)
         #     action = np.zeros_like(action)
         #     action[0] = 0.01
@@ -158,7 +157,9 @@ def collect_trajectory(
         if skip_action:
             action_info = env.create_action_dict(np.zeros_like(action))
         else:
+            print("action", action)
             action_info = env.step(action)
+
         action_info.update(controller_action_info)
 
         # Save Data #
