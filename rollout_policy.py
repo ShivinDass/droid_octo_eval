@@ -66,7 +66,7 @@ class PolicyWrapper:
     def process_action(self, action):
         # Normalize Action
         action = self.unnormalize(action, self.metadata["action"])
-        # action[-1] = 1-action[-1]
+        action[-1] = 1-action[-1]
         action[-1] = 1 if action[-1] > 0 else 0
 
         print('gripper', action[-1])
