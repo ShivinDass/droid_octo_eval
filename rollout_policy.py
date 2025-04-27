@@ -204,7 +204,7 @@ if __name__=='__main__':
             tasks=task,
         )
     )
-    policy = PolicyWrapper(policy_fn)
+    policy = PolicyWrapper(policy_fn, metadata=dataset_statistics)
 
     env = RobotEnv(camera_kwargs=dict(
         hand_camera=dict(image=True, concatenate_images=False, resolution=(128, 128), resize_func="cv2"),
