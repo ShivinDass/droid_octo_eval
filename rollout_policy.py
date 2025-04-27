@@ -59,7 +59,7 @@ class PolicyWrapper:
         # new_obs["image_wrist"] = cv2.cvtColor(obs["image"]["18659563_left"][..., :3].astype(np.uint8), cv2.COLOR_RGB2BGR).astype(np.float32)
         new_obs["image_primary"] = obs["image"]["36088355_left"][..., :3].astype(np.float32)
         new_obs["image_wrist"] = obs["image"]["18659563_left"][..., :3].astype(np.float32)
-        print('max', new_obs["image_primary"].max(), new_obs["image_primary"].min())
+        
         new_obs["pad_mask"] = np.ones(1)
         return new_obs
     
@@ -243,12 +243,14 @@ if __name__=='__main__':
     else:
         policy = None
 
-    collect_trajectory(
-        env,
-        controller=controller,
-        policy=policy,
-        wait_for_controller=True,
-        randomize_reset=False,
-        reset_robot=True,
-        record_traj=args.save_vid,
-    )
+    for i in range(args.n_rollouts):
+        input("Enter to reset and start:")
+        collect_trajectory(
+            env,
+            controller=controller,
+            policy=policy,
+            wait_for_controller=True,
+            randomize_reset=False,
+            reset_robot=True,
+            record_traj=args.save_vid,
+        )
