@@ -238,7 +238,7 @@ if __name__=='__main__':
     collect_trajectory(
         env,
         controller=controller,
-        policy=None, #policy,
+        policy=policy,
         wait_for_controller=True,
         randomize_reset=False,
         reset_robot=True,
