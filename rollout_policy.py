@@ -240,7 +240,7 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--ckpt", default=None, type=str, help="path to model checkpoint")
     parser.add_argument("--save_vid", action="store_true", help="create a video of rollout")
-    parser.add_argument("--n_rollouts", default=10, type=int, help="number of rollouts to perform")
+    parser.add_argument("--n_rollouts", default=30, type=int, help="number of rollouts to perform")
     # parser.add_argument("--task", default=None, type=str, help="task id to use")
     args = parser.parse_args()
 
@@ -280,8 +280,9 @@ if __name__=='__main__':
 
     text = None
     for i in range(args.n_rollouts):
+        print('Resetting environment')
         env.reset(randomize=False)
-        input("Enter to reset and start...")
+        # input("Enter to reset and start...")
         if text == None or input("Change task? (y/n)") == 'y':
             text = get_new_text_command_from_user()
 
@@ -297,7 +298,6 @@ if __name__=='__main__':
         
         else:
             print("Continuing:", text)
-
 
         policy.reset_state()
         collect_trajectory(
