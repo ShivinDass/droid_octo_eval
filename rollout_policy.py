@@ -70,7 +70,8 @@ class PolicyWrapper:
         # print('gripper', action[-1])
         # show only 2 decimal places of gripper actions
         print(f"Gripper: {action[-1]:.2f}")
-        action[-1] = 1 if action[-1] > 0.5 else -1
+        # action[-1] = 1 if action[-1] > 0.5 else -1
+        action[-1] = 1 if action[-1] > 0.25 else -1
 
         action = np.clip(action, -1, 1)
         return action
@@ -279,6 +280,7 @@ if __name__=='__main__':
 
     text = None
     for i in range(args.n_rollouts):
+        env.reset(randomize=False)
         input("Enter to reset and start...")
         if text == None or input("Change task? (y/n)") == 'y':
             text = get_new_text_command_from_user()
@@ -304,6 +306,6 @@ if __name__=='__main__':
             policy=policy,
             wait_for_controller=True,
             randomize_reset=False,
-            reset_robot=True,
+            reset_robot=False,
             record_traj=args.save_vid,
         )
