@@ -101,6 +101,9 @@ class PolicyWrapper:
                 f"Unknown action/proprio normalization type: {self.normalization_type}"
             )
 
+    def reset_state(self):
+        self.action_buffer = []
+
 def collect_trajectory(
         env,
         controller=None,
@@ -208,23 +211,46 @@ def supply_rng(f, rng=jax.random.PRNGKey(0)):
 
     return wrapped
 
+def get_text_from_task(task):
+    task = task.lower()
+    if 'bread' in task:
+        text='place the bread in the black bowl'
+    elif 'drawer' in task:
+        text='close the drawer'
+    elif 'napkin' in task:
+        text='place the napkin in the drawer'
+    else:
+        print("Invalid task.")
+        return None, False
+    
+    print('Task:', text)
+    return text, True
+
+def get_new_text_command_from_user():
+    valid_task = False
+    while not valid_task:
+        task = input("Enter task:")
+        text, valid_task = get_text_from_task(task)
+    
+    return text
+
 if __name__=='__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--ckpt", default=None, type=str, help="path to model checkpoint")
     parser.add_argument("--save_vid", action="store_true", help="create a video of rollout")
     parser.add_argument("--n_rollouts", default=10, type=int, help="number of rollouts to perform")
-    parser.add_argument("--task", default=None, type=str, help="task id to use")
+    # parser.add_argument("--task", default=None, type=str, help="task id to use")
     args = parser.parse_args()
 
-    if 'bread' == args.task:
-        text = 'place the bread in the black bowl'
-    elif 'drawer' == args.task:
-        text = 'close the drawer'
-    elif 'napkin' == args.task:
-        text = 'place the napkin in the drawer'
-    else:
-        raise ValueError(f"Unknown task id {args.task_id}")
+    # if 'bread' == args.task:
+    #     text = 'place the bread in the black bowl'
+    # elif 'drawer' == args.task:
+    #     text = 'close the drawer'
+    # elif 'napkin' == args.task:
+    #     text = 'place the napkin in the drawer'
+    # else:
+    #     raise ValueError(f"Unknown task id {args.task_id}")
 
     env = RobotEnv(action_space='cartesian_velocity', camera_kwargs=dict(
         hand_camera=dict(image=True, concatenate_images=False, resolution=(128, 128), resize_func="cv2"),
@@ -232,24 +258,50 @@ if __name__=='__main__':
     ))
     controller = VRPolicy(right_controller=True)
 
-    if args.ckpt is not None:
-        model = OctoModel.load_pretrained(args.ckpt)
-        dataset_statistics = model.dataset_statistics
+    
+    model = OctoModel.load_pretrained(args.ckpt)
+    dataset_statistics = model.dataset_statistics
+    # if args.ckpt is not None:
+    #     model = OctoModel.load_pretrained(args.ckpt)
+    #     dataset_statistics = model.dataset_statistics
 
-        task = model.create_tasks(texts=[text])
-        policy_fn = supply_rng(
-            partial(
-                sample_actions,
-                model,
-                tasks=task,
-            )
-        )
-        policy = PolicyWrapper(policy_fn, metadata=dataset_statistics)
-    else:
-        policy = None
+    #     task = model.create_tasks(texts=[text])
+    #     policy_fn = supply_rng(
+    #         partial(
+    #             sample_actions,
+    #             model,
+    #             tasks=task,
+    #         )
+    #     )
+    #     policy = PolicyWrapper(policy_fn, metadata=dataset_statistics)
+    # else:
+    #     policy = None
 
+    text = None
     for i in range(args.n_rollouts):
-        input("Enter to reset and start:")
+        input("Enter to reset and start...")
+        if text == None:
+            text = get_new_text_command_from_user()
+
+            task = model.create_tasks(texts=[text])
+            policy_fn = supply_rng(
+                partial(
+                    sample_actions,
+                    model,
+                    tasks=task,
+                )
+            )
+            policy = PolicyWrapper(policy_fn, metadata=dataset_statistics)
+        
+        else:
+            y = input("Change task? (y/n)")
+            if y == 'y':
+                text = get_new_text_command_from_user()
+            else:
+                print("Continuing:", text)
+
+
+        policy.reset_state()
         collect_trajectory(
             env,
             controller=controller,
