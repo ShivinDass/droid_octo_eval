@@ -67,9 +67,11 @@ class PolicyWrapper:
         # Normalize Action
         action = self.unnormalize(action, self.metadata["action"])
         action[-1] = 1-action[-1]
+        # print('gripper', action[-1])
+        # show only 2 decimal places of gripper actions
+        print(f"Gripper: {action[-1]:.2f}")
         action[-1] = 1 if action[-1] > 0 else 0
 
-        print('gripper', action[-1])
         action = np.clip(action, -1, 1)
         return action
     
