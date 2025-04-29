@@ -280,7 +280,7 @@ if __name__=='__main__':
     text = None
     for i in range(args.n_rollouts):
         input("Enter to reset and start...")
-        if text == None:
+        if text == None or input("Change task? (y/n)") == 'y':
             text = get_new_text_command_from_user()
 
             task = model.create_tasks(texts=[text])
@@ -294,11 +294,7 @@ if __name__=='__main__':
             policy = PolicyWrapper(policy_fn, metadata=dataset_statistics)
         
         else:
-            y = input("Change task? (y/n)")
-            if y == 'y':
-                text = get_new_text_command_from_user()
-            else:
-                print("Continuing:", text)
+            print("Continuing:", text)
 
 
         policy.reset_state()
