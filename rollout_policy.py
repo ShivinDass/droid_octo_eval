@@ -105,6 +105,7 @@ class PolicyWrapper:
     def reset_state(self):
         self.action_buffer = []
 
+import time
 def collect_trajectory(
         env,
         controller=None,
@@ -181,8 +182,8 @@ def collect_trajectory(
         # Close Files And Return #
         if end_traj:
             if record_traj:
-                write_video(np.array(recording1).astype(np.uint8), 'test1.mp4', fps=10)
-                write_video(np.array(recording2).astype(np.uint8), 'test2.mp4', fps=10)
+                write_video(np.array(recording1).astype(np.uint8), f'primary_{time.time()}.mp4', fps=10)
+                write_video(np.array(recording2).astype(np.uint8), f'writs_{time.time()}.mp4', fps=10)
             return controller_info
 
 
